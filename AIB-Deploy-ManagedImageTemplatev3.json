@@ -1,0 +1,76 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "imageTemplateName": {
+        "type": "string"
+      },
+      "api-version": {
+        "type": "string"
+      },
+      "svclocation": {
+        "type": "string"
+      },
+      "ScriptUri": {
+        "type": "string",
+        "defaultValue": "https://raw.githubusercontent.com/ty-james/Azure-Image-Builder/main/AIB-Script-W10Customizations.ps1"
+      }
+    },
+    "variables": {},
+    "resources": [
+      {
+        "name": "[parameters('imageTemplateName')]",
+        "type": "Microsoft.VirtualMachineImages/imageTemplates",
+        "apiVersion": "[parameters('api-version')]",
+        "location": "[parameters('svclocation')]",
+        "dependsOn": [],
+        "tags": {
+          "imagebuilderTemplate": "win10multi",
+          "userIdentity": "enabled"
+        },
+        "identity": {
+          "type": "UserAssigned",
+          "userAssignedIdentities": {
+            "<imgBuilderId>": {}
+          }
+        },
+        "properties": {
+            "buildTimeoutInMinutes": <timeout>,
+            "vmProfile": {
+            "vmSize": "<vmSize>",
+            "osDiskSizeGB": <osDisk>
+          },
+            "source": {
+            "type": "<type>",
+            "publisher": "<publisher>",
+            "offer": "<offer>",
+            "sku": "<sku>",
+            "version": "<version>"
+          },
+          "customize": [
+            {
+              "type": "PowerShell",
+              "name": "InstallApps",
+              "scriptUri": "[parameters('ScriptUri')]"
+            },
+            {
+              "type": "WindowsRestart",
+              "restartTimeout": "30m"
+            }
+          ],
+          "distribute": [
+            {
+              "type": "ManagedImage",
+              "imageId": "/subscriptions/<subscriptionID>/resourceGroups/<rgName>/providers/Microsoft.Compute/images/<imageName>",
+              "location": "<region>",
+              "runOutputName": "<runOutputName>",
+              "artifactTags": {
+                "source": "azVmImageBuilder",
+                "baseosimg": "windows10Multi"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
